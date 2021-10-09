@@ -81,7 +81,7 @@ int saveBMP(BMP_Image image, char * filename){
 }
 
 
-unsigned int gaussian_funct(int x, int y, unsigned int sigma){
+float gaussian_funct(int x, int y, float sigma){
 	/**It gives the value of the gaussian function in a certain point
 	PAR:
 		int, x: position on x
@@ -90,12 +90,12 @@ unsigned int gaussian_funct(int x, int y, unsigned int sigma){
 	RETURN:
 		value of the gaussian function in a certain point
 	*/
-	return exp(-1*((pow((x), 2) + pow((y), 2)) / ((2 * pow(sigma, 2))))) / (M_PI * 2 * pow(sigma, 2));
-	//return ((1 / 2*PI*pow(sigma, 2)) * exp(-(pow(x, 2)+pow(y, 2))/2*pow(sigma, 2)));
+	return (exp(-1*(x*x + y*y) / (2 * sigma*sigma)) / (M_PI * 2 * sigma*sigma));
+	//return ((1 / 2*M_PI*sigma*sigma) * exp(-1*(x*x+y*y)/2*sigma*sigma));
 }
 
 
-void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], unsigned int sigma){
+void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], float sigma){
 	/**It builds gaussian filter kernel of dim = KERNEL_DIM
 	PAR:
 		gaussian_kernel: pointer to the matrix containing the kernel
@@ -103,11 +103,25 @@ void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], unsigned int sigma)
 	RETURN:
 		void
 	*/
-	int i, j;
+	int i, j, up, down;
+	float normalizer;
 
-	for(i = -1; i <= 1; i++){
-		for(j = -1; j <= 1; j++){
-			gaussian_kernel[i + 1][j + 1] = gaussian_funct(i, j, sigma);
+	// Building kernel
+	up = KERNEL_DIM/2;
+	down = -1 * up;
+
+	normalizer = 0;
+	for(i = down; i <= up; i++){
+		for(j = down; j <= up; j++){
+			gaussian_kernel[i + up][j + up] = gaussian_funct(i, j, sigma);
+			normalizer += gaussian_kernel[i + up][j + up];
+		}
+	}
+
+	// Normalizing kernel
+	for(i = 0; i < KERNEL_DIM; i++){
+		for(j = 0; j < KERNEL_DIM; j++){
+			gaussian_kernel[i + up][j + up] /= normalizer;
 		}
 	}
 
@@ -116,13 +130,12 @@ void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], unsigned int sigma)
 int main(){
 	// kernel
 	float gaussian_kernel[KERNEL_DIM][KERNEL_DIM];
-	unsigned int sigma;
+	float sigma;
 	// image
 	BMP_Image picture;
 	// utility
 	int check;
 	int i, j;
-
 
 
 	loadBMP("Immagini/abdomen.bmp", &picture);
