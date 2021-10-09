@@ -80,12 +80,12 @@ int saveBMP(BMP_Image image, char * filename){
 int main(){
 	BMP_Image prova;
 	int check;
+	int i, j;
 
 	loadBMP("Immagini/abdomen.bmp", &prova);
-	saveBMP(prova, "prova.txt");
 
-	printf("ciao\n");
-	printf("%s", prova.data[0][0].grey);
+	saveBMP(prova, "prova.bmp");
+
 
 	return 0;
 }
