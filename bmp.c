@@ -1,5 +1,9 @@
 #include <stdio.h>
+#include <math.h> // compile with flag -lm to use this library
 #include "bmp.h"
+
+#define KERNEL_DIM 3
+#define PI 3,14159
 
 
 int loadBMP(char *filename, BMP_Image *image){
@@ -77,14 +81,63 @@ int saveBMP(BMP_Image image, char * filename){
 }
 
 
+unsigned int gaussian_funct(int x, int y, unsigned int sigma){
+	/**It gives the value of the gaussian function in a certain point
+	PAR:
+		int, x: position on x
+		int, y: position on y
+		unsigned int, sigma: standard deviation. It must be in the interval [0, 10]
+	RETURN:
+		value of the gaussian function in a certain point
+	*/
+	return exp(-1*((pow((x), 2) + pow((y), 2)) / ((2 * pow(sigma, 2))))) / (M_PI * 2 * pow(sigma, 2));
+	//return ((1 / 2*PI*pow(sigma, 2)) * exp(-(pow(x, 2)+pow(y, 2))/2*pow(sigma, 2)));
+}
+
+
+void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], unsigned int sigma){
+	/**It builds gaussian filter kernel of dim = KERNEL_DIM
+	PAR:
+		gaussian_kernel: pointer to the matrix containing the kernel
+		sigma: standard deviation. It must be in the interval [0, 10]
+	RETURN:
+		void
+	*/
+	int i, j;
+
+	for(i = -1; i <= 1; i++){
+		for(j = -1; j <= 1; j++){
+			gaussian_kernel[i + 1][j + 1] = gaussian_funct(i, j, sigma);
+		}
+	}
+
+}
+
 int main(){
-	BMP_Image prova;
+	// kernel
+	float gaussian_kernel[KERNEL_DIM][KERNEL_DIM];
+	unsigned int sigma;
+	// image
+	BMP_Image picture;
+	// utility
 	int check;
 	int i, j;
 
-	loadBMP("Immagini/abdomen.bmp", &prova);
 
-	saveBMP(prova, "prova.bmp");
+
+	loadBMP("Immagini/abdomen.bmp", &picture);
+
+	sigma = 1;
+	mk_gaussian_kernel(gaussian_kernel, sigma);
+
+	for(i = 0; i <= 2; i++){
+		for(j = 0; j <= 2; j++){
+			printf("%f ", gaussian_kernel[i][j]);
+		}
+		printf("\n");
+	}
+
+	saveBMP(picture, "prova.bmp");
 
 
 	return 0;
