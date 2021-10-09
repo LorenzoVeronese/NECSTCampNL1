@@ -1,6 +1,6 @@
 
 // Dimensione immagine in pixel, quadrata
-#define DATA_DIM 256             
+#define DATA_DIM 256
 
 //Struttura per l'header
 typedef struct {
@@ -25,7 +25,7 @@ typedef struct {
 
 //Struttura per rappresentare un pixel. Nel nostro caso solo 8 bits, un solo campo
 typedef struct {
-   unsigned char grey;			
+   unsigned char grey;
 } Pixel;
 
 //Struttura immagine
@@ -34,8 +34,8 @@ typedef struct{
 	Header header;                              //Header
 	Info info;                                  //Info header
 	unsigned char color_table[DATA_DIM*4];      //Tabella colori
-	Pixel data[DATA_DIM][DATA_DIM];             //Matrice di pixel   
-}BMP_Image;
+	Pixel data[DATA_DIM][DATA_DIM];             //Matrice di pixel
+} BMP_Image;
 
 //Caricamento immagine
 int loadBMP(char * filename, BMP_Image *img);
