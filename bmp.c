@@ -6,6 +6,7 @@
 #define PI 3,14159
 
 
+
 int loadBMP(char *filename, BMP_Image *image){
 	/** Funzione per caricare un'immagine BMP da file
 	Parametri:
@@ -53,6 +54,7 @@ int loadBMP(char *filename, BMP_Image *image){
 }
 
 
+
 int saveBMP(BMP_Image image, char * filename){
 	/** Funzione per salvare una struttura BMP_Image su file
 	Parametri:
@@ -81,6 +83,7 @@ int saveBMP(BMP_Image image, char * filename){
 }
 
 
+
 float gaussian_funct(int x, int y, float sigma){
 	/**It gives the value of the gaussian function in a certain point
 	PAR:
@@ -93,6 +96,7 @@ float gaussian_funct(int x, int y, float sigma){
 	return (exp(-1*(x*x + y*y) / (2 * sigma*sigma)) / (M_PI * 2 * sigma*sigma));
 	//return ((1 / 2*M_PI*sigma*sigma) * exp(-1*(x*x+y*y)/2*sigma*sigma));
 }
+
 
 
 float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
@@ -135,26 +139,51 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 	return gaussian_kernel;
 }
 
-/*
-void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel){
+
+
+void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel, unsigned int kernel_dim){
 	// This will be used to add a black border to the picture
-	Pixel temp[DATA_DIM + KERNEL_DIM/2 + 1][DATA_DIM + KERNEL_DIM/2 + 1];
+	Pixel** bordered;
+	int i, j, h, k, m, n;
+	unsigned char prova;
+	unsigned int border_dim;
 
-	int i, j;
 
-	for(i = 0; i < DATA_DIM + KERNEL_DIM/2 + 1; i++){
-		for(j = 0; j < DATA_DIM + KERNEL_DIM/2 + 1; j++){
-			temp[i][j].grey = 0;
+	// Creating the black bordered image
+	border_dim = kernel_dim/2;
+	bordered = (Pixel**)malloc((DATA_DIM + (border_dim*2)) * sizeof(Pixel*));
+    for(i = 0; i < (DATA_DIM + ((kernel_dim/2)*2)); i++){
+        bordered[i] = (Pixel*)calloc(((DATA_DIM + (border_dim*2))), sizeof(Pixel));
+    }
+
+	// i and j slide bordered, h and k slide image
+	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
+		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+			bordered[i][j].grey = image.data[h][k].grey;
 		}
 	}
 
-	for(i = KERNEL_DIM)
 
+	// Apply filter
+	for(i = 0; i < DATA_DIM; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			for(h = 0, m = i; h < kernel_dim; h++, n++){
+				for(k = 0, n = j; k < kernel_dim; m++){
+					printf("%d, %d, %d, %d", i, j, m, n);
+					bordered[m][n].grey *= gaussian_kernel[h][k];
+				}
+			}
+		}
+	}
 
+	// i and j slide bordered, h and k slide image
+	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
+		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+			image.data[h][k].grey = bordered[i][j].grey;
+		}
+	}
 
-
-
-}*/
+}
 
 
 
@@ -164,17 +193,20 @@ int main(){
 	float sigma;
 	unsigned int kernel_dim;
 	// image
-	BMP_Image picture;
+	BMP_Image image;
 	// utility
 	int check;
 	int i, j;
 
 
-	loadBMP("Immagini/abdomen.bmp", &picture);
+	loadBMP("Immagini/brain.bmp", &image);
 
 	sigma = 1;
-	kernel_dim = 3;
+	kernel_dim = 5;
 	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
+
+
+	apply_gaussian_filter(image, gaussian_kernel, kernel_dim);
 
 	//apply_gaussian_filter(picture, gaussian_kernel);
 	for(i = 0; i < kernel_dim; i++){
@@ -184,7 +216,7 @@ int main(){
 		printf("\n");
 	}
 
-	saveBMP(picture, "prova.bmp");
+	saveBMP(image, "prova.bmp");
 
 
 	return 0;
