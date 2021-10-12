@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <math.h> // compile with flag -lm to use this library
+#include <stdlib.h>
 #include "bmp.h"
 
-#define KERNEL_DIM 3
 #define PI 3,14159
 
 
@@ -95,7 +95,7 @@ float gaussian_funct(int x, int y, float sigma){
 }
 
 
-void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], float sigma){
+float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 	/**It builds gaussian filter kernel of dim = KERNEL_DIM
 	PAR:
 		gaussian_kernel: pointer to the matrix containing the kernel
@@ -103,11 +103,18 @@ void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], float sigma){
 	RETURN:
 		void
 	*/
+	float** gaussian_kernel;
 	int i, j, up, down;
 	float normalizer;
 
+	// Creating kernel
+    gaussian_kernel = (float**)malloc(kernel_dim * sizeof(float*));
+    for(i = 0; i < kernel_dim; i++){
+        gaussian_kernel[i] = (float*)malloc((kernel_dim) * sizeof(float));
+    }
+
 	// Building kernel
-	up = KERNEL_DIM/2;
+	up = kernel_dim/2;
 	down = -1 * up;
 
 	normalizer = 0;
@@ -119,18 +126,43 @@ void mk_gaussian_kernel(float gaussian_kernel[][KERNEL_DIM], float sigma){
 	}
 
 	// Normalizing kernel
-	for(i = 0; i < KERNEL_DIM; i++){
-		for(j = 0; j < KERNEL_DIM; j++){
-			gaussian_kernel[i + up][j + up] /= normalizer;
+	for(i = 0; i < kernel_dim; i++){
+		for(j = 0; j < kernel_dim; j++){
+			gaussian_kernel[i][j] /= normalizer;
 		}
 	}
 
+	return gaussian_kernel;
 }
+
+/*
+void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel){
+	// This will be used to add a black border to the picture
+	Pixel temp[DATA_DIM + KERNEL_DIM/2 + 1][DATA_DIM + KERNEL_DIM/2 + 1];
+
+	int i, j;
+
+	for(i = 0; i < DATA_DIM + KERNEL_DIM/2 + 1; i++){
+		for(j = 0; j < DATA_DIM + KERNEL_DIM/2 + 1; j++){
+			temp[i][j].grey = 0;
+		}
+	}
+
+	for(i = KERNEL_DIM)
+
+
+
+
+
+}*/
+
+
 
 int main(){
 	// kernel
-	float gaussian_kernel[KERNEL_DIM][KERNEL_DIM];
+	float** gaussian_kernel;
 	float sigma;
+	unsigned int kernel_dim;
 	// image
 	BMP_Image picture;
 	// utility
@@ -141,10 +173,12 @@ int main(){
 	loadBMP("Immagini/abdomen.bmp", &picture);
 
 	sigma = 1;
-	mk_gaussian_kernel(gaussian_kernel, sigma);
+	kernel_dim = 3;
+	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
 
-	for(i = 0; i <= 2; i++){
-		for(j = 0; j <= 2; j++){
+	//apply_gaussian_filter(picture, gaussian_kernel);
+	for(i = 0; i < kernel_dim; i++){
+		for(j = 0; j < kernel_dim; j++){
 			printf("%f ", gaussian_kernel[i][j]);
 		}
 		printf("\n");
