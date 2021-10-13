@@ -141,10 +141,10 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 
 
 
-void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel, unsigned int kernel_dim){
+void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned int kernel_dim){
 	// This will be used to add a black border to the picture
 	Pixel** bordered;
-	int i, j, h, k, m, n;
+	int i, j, h, k;
 	unsigned char prova;
 	unsigned int border_dim;
 
@@ -159,18 +159,20 @@ void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel, unsigned in
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
-			bordered[i][j].grey = image.data[h][k].grey;
+			bordered[i][j].grey = image -> data[h][k].grey;
 		}
 	}
 
 
 	// Apply filter
+	// i, j is the up-left angle to start
 	for(i = 0; i < DATA_DIM; i++){
 		for(j = 0; j < DATA_DIM; j++){
-			for(h = 0, m = i; h < kernel_dim; h++, n++){
-				for(k = 0, n = j; k < kernel_dim; m++){
-					printf("%d, %d, %d, %d", i, j, m, n);
-					bordered[m][n].grey *= gaussian_kernel[h][k];
+			for(h = 0; h < kernel_dim; h++){
+				for(k = 0; k < kernel_dim; k++){
+					//D printf("%d, %d\n", i, j);
+					bordered[i + h][j + k].grey *= gaussian_kernel[h][k];
+					//D bordered[i + h][j + k].grey = 0;
 				}
 			}
 		}
@@ -179,9 +181,19 @@ void apply_gaussian_filter(BMP_Image image, float** gaussian_kernel, unsigned in
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
-			image.data[h][k].grey = bordered[i][j].grey;
+			printf("%d\n", 'b' - 'a');
+			image -> data[h][k].grey = bordered[i][j].grey - 48;
+			//printf("%d\n", image -> data[h][k].grey);
 		}
 	}
+
+
+	/*D
+	for(i = 0; i < DATA_DIM; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			image.data[i][j].grey = 0;
+		}
+	}*/
 
 }
 
@@ -202,11 +214,13 @@ int main(){
 	loadBMP("Immagini/brain.bmp", &image);
 
 	sigma = 1;
-	kernel_dim = 5;
+	kernel_dim = 3;
 	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
 
 
-	apply_gaussian_filter(image, gaussian_kernel, kernel_dim);
+	apply_gaussian_filter(&image, gaussian_kernel, kernel_dim);
+
+
 
 	//apply_gaussian_filter(picture, gaussian_kernel);
 	for(i = 0; i < kernel_dim; i++){
@@ -216,8 +230,8 @@ int main(){
 		printf("\n");
 	}
 
-	saveBMP(image, "prova.bmp");
-
+	check = saveBMP(image, "prova.bmp");
+	printf("%d\n", check);
 
 	return 0;
 }
