@@ -159,20 +159,38 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+
 			bordered[i][j].grey = image -> data[h][k].grey;
+			printf("%u, %u\n", image -> data[h][k].grey, bordered[i][j].grey);
 		}
 	}
 
+	/*D
+	for(i = 0; i < DATA_DIM - 100; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			image -> data[i][j].grey = (unsigned char)((double)image -> data[i][j].grey * 1.0);
+			printf("%d, %d: %u\n", i, j, image -> data[i][j].grey);
+		}
+		printf("\n");
+	}*/
 
+
+	int in_val;
+	double doub_val;
 	// Apply filter
 	// i, j is the up-left angle to start
 	for(i = 0; i < DATA_DIM; i++){
 		for(j = 0; j < DATA_DIM; j++){
-			for(h = 0; h < kernel_dim; h++){
+			// in the image, i starts form down
+			for(h = kernel_dim - 1; h >= 0; h--){
 				for(k = 0; k < kernel_dim; k++){
-					//D printf("%d, %d\n", i, j);
-					bordered[i + h][j + k].grey *= gaussian_kernel[h][k];
-					//D bordered[i + h][j + k].grey = 0;
+					printf("%d - %d : \n", i, j );
+					printf("%f ", gaussian_kernel[h][k]);
+					printf("%u ", image -> data[i + kernel_dim/2][j + kernel_dim/2].grey);
+					printf("%f ", (double)bordered[i + h][j + k].grey);
+					printf("%u\n", bordered[i + h][j + k].grey);
+					bordered[i + h][j + k].grey = (unsigned char)((double)bordered[i + h][j + k].grey * gaussian_kernel[h][k]);
+					//printf("%u\n", bordered[i + h][j + k].grey);
 				}
 			}
 		}
@@ -181,18 +199,18 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
-			printf("%d\n", 'b' - 'a');
-			image -> data[h][k].grey = bordered[i][j].grey - 48;
+			//image -> data[h][k].grey = 0;
+			image -> data[h][k].grey = bordered[i][j].grey;
 			//printf("%d\n", image -> data[h][k].grey);
 		}
 	}
 
-
 	/*D
 	for(i = 0; i < DATA_DIM; i++){
 		for(j = 0; j < DATA_DIM; j++){
-			image.data[i][j].grey = 0;
+			printf("%c\n", image -> data[i][j].grey);
 		}
+		printf("\n");
 	}*/
 
 }
@@ -210,8 +228,18 @@ int main(){
 	int check;
 	int i, j;
 
-
 	loadBMP("Immagini/brain.bmp", &image);
+
+	/**
+	for(i = 0; i < DATA_DIM; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			image.data[i][j].grey = (unsigned char)((double)image.data[i][j].grey * 0.0);
+			printf("%d, %d: %u\n", i, j, image.data[i][j].grey);
+		}
+		printf("\n");
+	}
+	*/
+
 
 	sigma = 1;
 	kernel_dim = 3;
