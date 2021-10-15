@@ -136,6 +136,14 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 		}
 	}
 
+
+	divider = gaussian_kernel[0][0];
+	for(i = 0; i < kernel_dim; i++){
+		for(j = 0; j < kernel_dim; j++){
+			gaussian_kernel[i][j] /= divider;
+		}
+	}
+
 	return gaussian_kernel;
 }
 
@@ -144,11 +152,9 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned int kernel_dim){
 	// This will be used to add a black border to the picture
 	Pixel** bordered;
-	float** temp_kernel;
 	int i, j, h, k;
 	unsigned char prova;
 	unsigned int border_dim;
-	float total_weight;
 
 
 	// Creating the black bordered image
@@ -161,49 +167,55 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+
 			bordered[i][j].grey = image -> data[h][k].grey;
+			//printf("%u, %u\n", image -> data[h][k].grey, bordered[i][j].grey);
 		}
 	}
 
-	// TODO extend borders
+	/*D
+	for(i = 0; i < DATA_DIM - 100; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			image -> data[i][j].grey = (unsigned char)((double)image -> data[i][j].grey * 1.0);
+			printf("%d, %d: %u\n", i, j, image -> data[i][j].grey);
+		}
+		printf("\n");
+	}*/
 
 
-
-
-	// Create a kernel-dimensioned matrix for the next step
-	temp_kernel = (float**)malloc(kernel_dim * sizeof(float*));
-    for(i = 0; i < kernel_dim; i++){
-        temp_kernel[i] = (float*)malloc((kernel_dim) * sizeof(float));
-    }
-
-
+	int in_val;
+	double doub_val;
 	// Apply filter
-	total_weight = 0;
 	// i, j is the up-left angle to start
 	for(i = 0; i < DATA_DIM; i++){
-
 		for(j = 0; j < DATA_DIM; j++){
 			// in the image, i starts form down
 			for(h = kernel_dim - 1; h >= 0; h--){
 				for(k = 0; k < kernel_dim; k++){
-					// compute weighted values
-					temp_kernel[kernel_dim - 1 - h][k] = (float)bordered[i + h][j + k].grey * gaussian_kernel[h][k];
-					total_weight += temp_kernel[kernel_dim - 1 - h][k];
+					bordered[i + h][j + k].grey = (unsigned char)(
+						(double)bordered[i + h][j + k].grey * gaussian_kernel[h][k]
+					);
 				}
 			}
-			// apply weighted values to the center one
-			bordered[i + border_dim + 1][j + border_dim + 1].grey = (unsigned char)total_weight;
-			total_weight  = 0.0;
 		}
 	}
 
 	// i and j slide bordered, h and k slide image
 	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+			//image -> data[h][k].grey = 0;
 			image -> data[h][k].grey = bordered[i][j].grey;
+			//printf("%d\n", image -> data[h][k].grey);
 		}
 	}
 
+	/*D
+	for(i = 0; i < DATA_DIM; i++){
+		for(j = 0; j < DATA_DIM; j++){
+			printf("%c\n", image -> data[i][j].grey);
+		}
+		printf("\n");
+	}*/
 
 }
 
@@ -220,7 +232,7 @@ int main(){
 	int check;
 	int i, j;
 
-	loadBMP("Immagini/brain.bmp", &image);
+	loadBMP("Immagini/brain1.bmp", &image);
 
 	/**
 	for(i = 0; i < DATA_DIM; i++){
