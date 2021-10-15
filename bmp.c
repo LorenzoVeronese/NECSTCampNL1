@@ -109,7 +109,7 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 	*/
 	float** gaussian_kernel;
 	int i, j, up, down;
-	float normalizer;
+	float normalizer, divider;
 
 	// Creating kernel
     gaussian_kernel = (float**)malloc(kernel_dim * sizeof(float*));
@@ -133,6 +133,14 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 	for(i = 0; i < kernel_dim; i++){
 		for(j = 0; j < kernel_dim; j++){
 			gaussian_kernel[i][j] /= normalizer;
+		}
+	}
+
+
+	divider = gaussian_kernel[0][0];
+	for(i = 0; i < kernel_dim; i++){
+		for(j = 0; j < kernel_dim; j++){
+			gaussian_kernel[i][j] /= divider;
 		}
 	}
 
@@ -161,7 +169,7 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
 
 			bordered[i][j].grey = image -> data[h][k].grey;
-			printf("%u, %u\n", image -> data[h][k].grey, bordered[i][j].grey);
+			//printf("%u, %u\n", image -> data[h][k].grey, bordered[i][j].grey);
 		}
 	}
 
@@ -184,13 +192,9 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 			// in the image, i starts form down
 			for(h = kernel_dim - 1; h >= 0; h--){
 				for(k = 0; k < kernel_dim; k++){
-					printf("%d - %d : \n", i, j );
-					printf("%f ", gaussian_kernel[h][k]);
-					printf("%u ", image -> data[i + kernel_dim/2][j + kernel_dim/2].grey);
-					printf("%f ", (double)bordered[i + h][j + k].grey);
-					printf("%u\n", bordered[i + h][j + k].grey);
-					bordered[i + h][j + k].grey = (unsigned char)((double)bordered[i + h][j + k].grey * gaussian_kernel[h][k]);
-					//printf("%u\n", bordered[i + h][j + k].grey);
+					bordered[i + h][j + k].grey = (unsigned char)(
+						(double)bordered[i + h][j + k].grey * gaussian_kernel[h][k]
+					);
 				}
 			}
 		}
@@ -228,7 +232,7 @@ int main(){
 	int check;
 	int i, j;
 
-	loadBMP("Immagini/brain.bmp", &image);
+	loadBMP("Immagini/brain1.bmp", &image);
 
 	/**
 	for(i = 0; i < DATA_DIM; i++){
@@ -247,7 +251,6 @@ int main(){
 
 
 	apply_gaussian_filter(&image, gaussian_kernel, kernel_dim);
-
 
 
 	//apply_gaussian_filter(picture, gaussian_kernel);
