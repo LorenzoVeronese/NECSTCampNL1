@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "bmp.h"
 
-#define PI 3,14159
-
 
 
 int loadBMP(char *filename, BMP_Image *image){
@@ -87,8 +85,8 @@ int saveBMP(BMP_Image image, char * filename){
 float gaussian_funct(int x, int y, float sigma){
 	/**It gives the value of the gaussian function in a certain point
 	PAR:
-		int, x: position on x
-		int, y: position on y
+		x: position on x
+		y: position on y
 		unsigned int, sigma: standard deviation. It must be in the interval [0, 10]
 	RETURN:
 		value of the gaussian function in a certain point
@@ -100,16 +98,16 @@ float gaussian_funct(int x, int y, float sigma){
 
 
 float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
-	/**It builds gaussian filter kernel of dim = KERNEL_DIM
+	/**It builds gaussian filter kernel of dim = KERNEL_DIM.
 	PAR:
 		gaussian_kernel: pointer to the matrix containing the kernel
 		sigma: standard deviation. It must be in the interval [0, 10]
 	RETURN:
-		void
+		the pointer to the kernel
 	*/
 	float** gaussian_kernel;
 	int i, j, up, down;
-	float normalizer, divider;
+	float normalizer;
 
 	// Creating kernel
     gaussian_kernel = (float**)malloc(kernel_dim * sizeof(float*));
@@ -140,7 +138,16 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 }
 
 
+
 void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
+	/**It symmetrically modifies the borders of the image.
+	PAR:
+		image: image to modify
+		bordered: it's borders has to be changed
+		border_dim: dimension of the black border
+	RETURN:
+		void
+	*/
 	int i, j;
 
 
@@ -179,12 +186,22 @@ void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
 }
 
 
+
 void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned int kernel_dim){
-	// This will be used to add a black border to the picture
+	/**It applies the gaussian filter to a given image.
+	PAR:
+		image: image to modify
+		gaussian_kernel: the kernel for the convolution
+		kernel_dim: dimensions of the kernel
+	RETURN:
+		void
+	*/
+	// this will be used to add a black border to the picture
 	Pixel** bordered;
+	// temporary matrix used to store values of each step
 	float** temp_kernel;
+	// utility
 	int i, j, h, k;
-	unsigned char prova;
 	unsigned int border_dim;
 	float total_weight;
 
@@ -244,6 +261,7 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 }
 
 
+
 int main(){
 	// kernel
 	float** gaussian_kernel;
@@ -267,7 +285,7 @@ int main(){
 	}
 	*/
 
-	sigma = 3;
+	sigma = 1;
 	kernel_dim = 7;
 	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
 
@@ -284,8 +302,8 @@ int main(){
 
 
 	check = saveBMP(image, "prova.bmp");
-	if(check == 1){
-		printf("Immagine modificata correttamente\n", );
+	if(check == 0){
+		printf("Immagine modificata correttamente\n");
 	}
 
 
