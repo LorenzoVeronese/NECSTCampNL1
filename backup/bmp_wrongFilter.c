@@ -232,7 +232,7 @@ int main(){
 	int check;
 	int i, j;
 
-	loadBMP("Immagini/brain1.bmp", &image);
+	loadBMP("Immagini/brain.bmp", &image);
 
 	/**
 	for(i = 0; i < DATA_DIM; i++){
