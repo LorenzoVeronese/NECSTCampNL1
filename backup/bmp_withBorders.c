@@ -138,6 +138,54 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 }
 
 
+/* Not used anymore since now I simply don't consider the black borders
+void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
+	/**It symmetrically modifies the borders of the image.
+	PAR:
+		image: image to modify
+		bordered: it's borders has to be changed
+		border_dim: dimension of the black border
+	RETURN:
+		void
+	*//*
+	int i, j;
+
+
+	// Extend borders symmetrically
+	// left column
+	for(i = border_dim; i < DATA_DIM + border_dim; i++){
+		for(j = 0; j < border_dim; j++){
+			bordered[i][j].grey = image -> data[i][border_dim + j].grey; //reflect the image
+		}
+	}
+	// down row
+	for(i = DATA_DIM + border_dim; i < DATA_DIM + border_dim*2; i++){
+		for(j = 0; j < border_dim; j++){
+			bordered[i][j].grey = image -> data[i + border_dim - i][j].grey; //reflect the image
+		}
+	}
+	// right column
+	for(i = border_dim; i < DATA_DIM + border_dim; i++){
+		for(j = DATA_DIM + border_dim; j < DATA_DIM + 2*border_dim; j++){
+			bordered[i][j].grey = image -> data[i][j - border_dim].grey; //reflect the image
+		}
+	}
+	// up row
+	for(i = 0; i < border_dim; i++){
+		for(j = 0; j < DATA_DIM + border_dim; j++){
+			bordered[i][j].grey = image -> data[border_dim + i][j].grey; //reflect the image
+		}
+	}
+	// angles
+	for(i = 0; i < border_dim; i++){
+		bordered[i][i].grey = bordered[i + border_dim][i + border_dim].grey; // up-left
+		bordered[DATA_DIM + border_dim*2 - 1 - i][i].grey = bordered[DATA_DIM + border_dim - 1 - i][i + border_dim].grey; // down-left
+		bordered[DATA_DIM + border_dim*2 - 1 - i][DATA_DIM + border_dim*2 - 1 - i].grey = bordered[DATA_DIM + border_dim - 1 - i][DATA_DIM + border_dim - 1 - i].grey; // down-right
+		bordered[i][DATA_DIM + border_dim*2 - 1 - i].grey = bordered[i + border_dim][DATA_DIM + border_dim - 1 - i].grey; // up-right
+	}
+}
+*/
+
 
 void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned int kernel_dim){
 	/**It applies the gaussian filter to a given image.
@@ -172,6 +220,7 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 		}
 	}
 
+	// extend_borders(image, bordered, border_dim);
 
 	// Create a kernel-dimensioned matrix for the next step
 	temp_kernel = (float**)malloc(kernel_dim * sizeof(float*));
