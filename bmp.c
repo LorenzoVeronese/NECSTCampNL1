@@ -138,7 +138,7 @@ float** mk_gaussian_kernel(float sigma, unsigned int kernel_dim){
 }
 
 
-
+/* Not used anymore since now I simply don't consider the black borders
 void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
 	/**It symmetrically modifies the borders of the image.
 	PAR:
@@ -147,7 +147,7 @@ void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
 		border_dim: dimension of the black border
 	RETURN:
 		void
-	*/
+	*//*
 	int i, j;
 
 
@@ -184,7 +184,7 @@ void extend_borders(BMP_Image* image, Pixel** bordered, int border_dim){
 		bordered[i][DATA_DIM + border_dim*2 - 1 - i].grey = bordered[i + border_dim][DATA_DIM + border_dim - 1 - i].grey; // up-right
 	}
 }
-
+*/
 
 
 void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned int kernel_dim){
@@ -220,9 +220,7 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 		}
 	}
 
-
-	extend_borders(image, bordered, border_dim);
-
+	// extend_borders(image, bordered, border_dim);
 
 	// Create a kernel-dimensioned matrix for the next step
 	temp_kernel = (float**)malloc(kernel_dim * sizeof(float*));
@@ -233,21 +231,22 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 
 	// Apply filter
 	total_weight = 0;
-	// i, j is the up-left angle to start
+	// i, j is the up-left angle of bordered where I start
 	for(i = 0; i < DATA_DIM; i++){
-
 		for(j = 0; j < DATA_DIM; j++){
-			// in the image, i starts form down
 			//D for(h = kernel_dim - 1; h >= 0; h--){
 			for(h = 0; h < kernel_dim; h++){
 				for(k = 0; k < kernel_dim; k++){
 					// compute weighted values
-					temp_kernel[kernel_dim - 1 - h][k] = (float)bordered[i + h][j + k].grey * gaussian_kernel[h][k];
-					total_weight += temp_kernel[kernel_dim - 1 - h][k];
+					if(!(i + h < border_dim || i + h > DATA_DIM + border_dim || j + k < border_dim || j + k > DATA_DIM + border_dim )){
+						// in the image, i starts form down
+						temp_kernel[kernel_dim - 1 - h][k] = (float)bordered[i + h][j + k].grey * gaussian_kernel[h][k];
+						total_weight += temp_kernel[kernel_dim - 1 - h][k];
+					}
 				}
 			}
 			// apply weighted values to the center one
-			bordered[i + border_dim + 1][j + border_dim + 1].grey = (unsigned char)total_weight;
+			bordered[i + border_dim][j + border_dim].grey = (unsigned char)total_weight;
 			total_weight  = 0.0;
 		}
 	}
@@ -272,7 +271,7 @@ int main(){
 	// utility
 	int check;
 	int i, j;
-
+	char choosen;
 	loadBMP("Immagini/brain.bmp", &image);
 
 	/**D
@@ -285,9 +284,11 @@ int main(){
 	}
 	*/
 
+
 	sigma = 1;
-	kernel_dim = 7;
+	kernel_dim = 3;
 	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
+
 
 	printf("Kernel scelto: \n");
 	for(i = 0; i < kernel_dim; i++){
