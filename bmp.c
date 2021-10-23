@@ -224,11 +224,13 @@ void convolution(Pixel** bordered, float** kernel, unsigned int kernel_dim){
 
 
 void convolution_sobel(Pixel** bordered, float** kernel, unsigned int kernel_dim, float sensibility){
-	/**It makes convolution of a kernel of kernel_dim on a given bordered image
+	/**It makes sobel convolution of a kernel of kernel_dim on a given bordered image
 	PAR:
 		bordered: image to convolute on
 		kernel: kernel for the convolution
 		kernel_dim: dimensions of the kernel
+		sensibility: how to apply thresholding
+			It must be in the interval [1, 5]
 	RETURN:
 		void. The variable bordered is modified using pointer
 	*/
