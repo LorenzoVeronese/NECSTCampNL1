@@ -7,6 +7,7 @@
 #define DEFAULT_SENSIBILITY 4
 
 
+
 int loadBMP(char *filename, BMP_Image *image){
 	/** Funzione per caricare un'immagine BMP da file
 	Parametri:
@@ -409,16 +410,6 @@ int main(){
 
 
 	loadBMP("Immagini/brain.bmp", &image);
-
-	/**D
-	for(i = 0; i < DATA_DIM; i++){
-		for(j = 0; j < DATA_DIM; j++){
-			image.data[i][j].grey = (unsigned char)((double)image.data[i][j].grey * 0.0);
-			printf("%d, %d: %u\n", i, j, image.data[i][j].grey);
-		}
-		printf("\n");
-	}
-	*/
 
 
 	sigma = 1;
