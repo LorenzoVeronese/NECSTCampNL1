@@ -173,7 +173,7 @@ Pixel** mk_bordered(BMP_Image* image, unsigned int kernel_dim){
 
 
 
-void convolution(Pixel** bordered, float** kernel, unsigned int kernel_dim){
+void convolution(Pixel** bordered, float** kernel, unsigned int kernel_dim, int sobel){
 	/**It makes convolution of a kernel of kernel_dim on a given bordered image
 	PAR:
 		bordered: image to convolute on
@@ -212,7 +212,18 @@ void convolution(Pixel** bordered, float** kernel, unsigned int kernel_dim){
 				}
 			}
 			// apply weighted values to the center one
-			bordered[i + border_dim][j + border_dim].grey = (unsigned char)total_weight;
+			if(sobel == 0){
+				bordered[i + border_dim][j + border_dim].grey = (unsigned char)total_weight;
+			}
+			else{
+				if(total_weight > 350){
+					bordered[i + border_dim][j + border_dim].grey = (unsigned char)total_weight;
+				}
+				else{
+					bordered[i + border_dim][j + border_dim].grey = (unsigned char)0;
+				}
+			}
+
 			total_weight  = 0.0;
 		}
 	}
@@ -243,7 +254,7 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 	bordered = mk_bordered(image, kernel_dim);
 
 
-	convolution(bordered, gaussian_kernel, kernel_dim);
+	convolution(bordered, gaussian_kernel, kernel_dim, 0);
 
 
 	// Update image according to changes
@@ -264,9 +275,11 @@ Pixel** sobel_contours(BMP_Image* image){
 		Pixel matrix containing contours of the given image
 	*/
 	// matrix of the sobel kernel
-	int** x_sobel_kernel;
-	int** y_sobel_kernel;
-	int** temp_kernel;
+	float** x_sobel_kernel;
+	float** y_sobel_kernel;
+	float** temp_kernel;
+	Pixel** bordered_G1;
+	Pixel** bordered_G2;
 	Pixel** bordered;
 	// utility
 	int i, j, h, k;
@@ -274,9 +287,9 @@ Pixel** sobel_contours(BMP_Image* image){
 	int border_dim;
 
 	// Creating x_sobel_kernel
-	x_sobel_kernel = (int**)malloc(SOBEL_DIM * sizeof(int*));
+	x_sobel_kernel = (float**)malloc(SOBEL_DIM * sizeof(float*));
 	for(i = 0; i < SOBEL_DIM; i++){
-		x_sobel_kernel[i] = (int*)calloc(SOBEL_DIM, sizeof(int));
+		x_sobel_kernel[i] = (float*)calloc(SOBEL_DIM, sizeof(float));
 	}
 
 	x_sobel_kernel[0][0] = -1;
@@ -287,9 +300,9 @@ Pixel** sobel_contours(BMP_Image* image){
 	x_sobel_kernel[2][2] = 1;
 
 	// Creating y_sobel_kernel
-	y_sobel_kernel = (int**)malloc(SOBEL_DIM * sizeof(int*));
+	y_sobel_kernel = (float**)malloc(SOBEL_DIM * sizeof(float*));
 	for(i = 0; i < SOBEL_DIM; i++){
-		y_sobel_kernel[i] = (int*)calloc(SOBEL_DIM, sizeof(int));
+		y_sobel_kernel[i] = (float*)calloc(SOBEL_DIM, sizeof(float));
 	}
 
 	y_sobel_kernel[0][0] = -1;
@@ -300,50 +313,30 @@ Pixel** sobel_contours(BMP_Image* image){
 	y_sobel_kernel[2][2] = 1;
 
 	// Creating temp_kernel. This will be useful in next steps
-	temp_kernel = (int**)malloc(SOBEL_DIM * sizeof(int*));
+	temp_kernel = (float**)malloc(SOBEL_DIM * sizeof(float*));
 	for(i = 0; i < SOBEL_DIM; i++){
-		temp_kernel[i] = (int*)malloc(SOBEL_DIM * sizeof(int));
+		temp_kernel[i] = (float*)malloc(SOBEL_DIM * sizeof(float));
 	}
 
 
-	// Creating the black bordered image
-	border_dim = SOBEL_DIM/2;
-	bordered = (Pixel**)malloc((DATA_DIM + (border_dim*2)) * sizeof(Pixel*));
-	for(i = 0; i < (DATA_DIM + ((SOBEL_DIM/2)*2)); i++){
-		bordered[i] = (Pixel*)calloc(((DATA_DIM + (border_dim*2))), sizeof(Pixel));
-	}
+	bordered_G1 = mk_bordered(image, SOBEL_DIM);
+	bordered_G2 = mk_bordered(image, SOBEL_DIM);
+	bordered = mk_bordered(image, SOBEL_DIM);
 
-	// i and j slide bordered, h and k slide image
-	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
-		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
-			bordered[i][j].grey = image -> data[h][k].grey;
+
+	convolution(bordered_G1, x_sobel_kernel, SOBEL_DIM, 1);
+	convolution(bordered_G2, y_sobel_kernel, SOBEL_DIM, 1);
+
+
+	for(i = SOBEL_DIM / 2; i < DATA_DIM + SOBEL_DIM/2; i++){
+		for(j = SOBEL_DIM / 2; j < DATA_DIM + SOBEL_DIM/2; j++){
+			bordered[i][j].grey = (unsigned char)sqrt(pow((float)bordered_G1[i][j].grey, 2) + pow((float)bordered_G2[i][j].grey, 2));
+			/*thresholding
+			if (bordered[i][j].grey < (unsigned char)240){
+				bordered[i][j].grey = (unsigned char)0;
+			}*/
 		}
 	}
-
-
-
-	// Apply sobel kernel
-	total_weight = 0;
-	// i, j is the up-left angle of bordered where I start
-	for(i = 0; i < DATA_DIM; i++){
-		for(j = 0; j < DATA_DIM; j++){
-			//D for(h = kernel_dim - 1; h >= 0; h--){
-			for(h = 0; h < SOBEL_DIM; h++){
-				for(k = 0; k < SOBEL_DIM; k++){
-					// compute weighted values
-					if(!(i + h < SOBEL_DIM/2 || i + h > DATA_DIM + SOBEL_DIM/2 || j + k < SOBEL_DIM/2 || j + k > DATA_DIM + SOBEL_DIM/2)){
-						// in the image, i starts form down
-						temp_kernel[SOBEL_DIM - 1 - h][k] = (int)bordered[i + h][j + k].grey * x_sobel_kernel[h][k];
-						total_weight += temp_kernel[SOBEL_DIM - 1 - h][k];
-					}
-				}
-			}
-			// apply weighted values to the center one
-			bordered[i + SOBEL_DIM/2][j + SOBEL_DIM/2].grey = (unsigned char)total_weight;
-			total_weight  = 0;
-		}
-	}
-
 
 
 	// i and j slide bordered, h and k slide image
@@ -397,7 +390,7 @@ int main(){
 	apply_gaussian_filter(&image, gaussian_kernel, kernel_dim);
 
 
-	//sobel_contours(&image);
+	sobel_contours(&image);
 
 
 	check = saveBMP(image, "prova.bmp");
