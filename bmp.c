@@ -4,7 +4,7 @@
 #include "bmp.h"
 
 #define SOBEL_DIM 3
-#define DEFAULT_SENSIBILITY 4
+#define DEFAULT_SENSIBILITY 1.4
 
 
 
@@ -223,7 +223,7 @@ void convolution(Pixel** bordered, float** kernel, unsigned int kernel_dim){
 
 
 
-void convolution_sobel(Pixel** bordered, float** kernel, unsigned int kernel_dim, float sensibility){
+void convolution_sobel(float** bordered, float** kernel, unsigned int kernel_dim, float sensibility){
 	/**It makes sobel convolution of a kernel of kernel_dim on a given bordered image
 	PAR:
 		bordered: image to convolute on
@@ -258,18 +258,19 @@ void convolution_sobel(Pixel** bordered, float** kernel, unsigned int kernel_dim
 					// compute weighted values
 					if(!(i + h < border_dim || i + h > DATA_DIM + border_dim || j + k < border_dim || j + k > DATA_DIM + border_dim )){
 						// in the image, i starts form down
-						temp_kernel[kernel_dim - 1 - h][k] = (float)bordered[i + h][j + k].grey * kernel[h][k];
+						temp_kernel[kernel_dim - 1 - h][k] = bordered[i + h][j + k] * kernel[h][k];
 						total_weight += temp_kernel[kernel_dim - 1 - h][k];
 					}
 				}
 			}
 			// apply weighted values to the center one
+			/*
 			if(total_weight > sensibility*100){
 				bordered[i + border_dim][j + border_dim].grey = (unsigned char)total_weight; //total_weight
 			}
 			else{
 				bordered[i + border_dim][j + border_dim].grey = (unsigned char)0;
-			}
+			}*/
 
 			total_weight  = 0.0;
 		}
@@ -314,7 +315,40 @@ void apply_gaussian_filter(BMP_Image* image, float** gaussian_kernel, unsigned i
 
 
 
-Pixel** sobel_contours(BMP_Image* image, float sensibility, int shade){
+float** mk_bordered_float(BMP_Image* image, unsigned int kernel_dim){
+	/**It creates a copy of image, but surrounded by black borders of dim kernel_dim/2.
+	PAR:
+		image: image to copy and modify
+		kernel_dim: dimensions of the kernel
+	RETURN:
+		image with black borders
+	*/
+	float** bordered;
+	unsigned int border_dim;
+	int i, j, h, k;
+
+
+	// Creating the black container
+	border_dim = kernel_dim/2;
+	bordered = (float**)malloc((DATA_DIM + (border_dim*2)) * sizeof(float*));
+    for(i = 0; i < (DATA_DIM + ((kernel_dim/2)*2)); i++){
+        bordered[i] = (float*)calloc(((DATA_DIM + (border_dim*2))), sizeof(float));
+    }
+
+	// Copy the image into the center of the container
+	for(i = border_dim, h = 0; h < DATA_DIM; i++, h++){
+		for(j = border_dim, k = 0; k < DATA_DIM; j++, k++){
+			bordered[i][j] = (float)((image -> data[h][k].grey));
+		}
+	}
+
+
+	return bordered;
+}
+
+
+
+Pixel** sobel_contours(BMP_Image* image, float sensibility){
 	/**It applies the sobel convolution to find contours.
 	PAR:
 		image: image where to find contours
@@ -329,9 +363,9 @@ Pixel** sobel_contours(BMP_Image* image, float sensibility, int shade){
 	float** x_sobel_kernel;
 	float** y_sobel_kernel;
 	float** temp_kernel;
-	Pixel** bordered_G1;
-	Pixel** bordered_G2;
-	Pixel** bordered;
+	float** bordered_G1;
+	float** bordered_G2;
+	float** bordered;
 	// utility
 	int i, j, h, k;
 	int total_weight;
@@ -365,9 +399,9 @@ Pixel** sobel_contours(BMP_Image* image, float sensibility, int shade){
 	y_sobel_kernel[2][2] = 1;
 
 
-	bordered_G1 = mk_bordered(image, SOBEL_DIM);
-	bordered_G2 = mk_bordered(image, SOBEL_DIM);
-	bordered = mk_bordered(image, SOBEL_DIM);
+	bordered_G1 = mk_bordered_float(image, SOBEL_DIM);
+	bordered_G2 = mk_bordered_float(image, SOBEL_DIM);
+	bordered = mk_bordered_float(image, SOBEL_DIM);
 
 
 	convolution_sobel(bordered_G1, x_sobel_kernel, SOBEL_DIM, sensibility);
@@ -377,17 +411,14 @@ Pixel** sobel_contours(BMP_Image* image, float sensibility, int shade){
 
 	for(i = SOBEL_DIM / 2; i < DATA_DIM + SOBEL_DIM/2; i++){
 		for(j = SOBEL_DIM / 2; j < DATA_DIM + SOBEL_DIM/2; j++){
-			bordered[i][j].grey = (unsigned char)sqrt(pow((float)bordered_G1[i][j].grey, 2) + pow((float)bordered_G2[i][j].grey, 2));
+			bordered[i][j] = sqrt(pow(bordered_G1[i][j], 2) + pow(bordered_G2[i][j], 2));
 			//thresholding
-			if(!shade){
-				if(bordered[i][j].grey < (unsigned char)(sensibility*100)){
-					bordered[i][j].grey = (unsigned char)0;
-				}
-				else{
-					bordered[i][j].grey = (unsigned char)255;
-				}
+			if(bordered[i][j] < sensibility*100){
+				bordered[i][j] = 0.0;
 			}
-
+			else{
+				bordered[i][j] = 255.0;
+			}
 		}
 	}
 
@@ -395,7 +426,7 @@ Pixel** sobel_contours(BMP_Image* image, float sensibility, int shade){
 	// i and j slide bordered, h and k slide image
 	for(i = SOBEL_DIM/2, h = 0; h < DATA_DIM; i++, h++){
 		for(j = SOBEL_DIM/2, k = 0; k < DATA_DIM; j++, k++){
-			image -> data[h][k].grey = bordered[i][j].grey;
+			image -> data[h][k].grey = (unsigned char)bordered[i][j];
 		}
 	}
 }
@@ -415,13 +446,18 @@ int main(){
 	int i, j;
 	char choosen;
 	int shade;
+	int input;
 
 
-	loadBMP("Immagini/brain1.bmp", &image);
+	loadBMP("Immagini/transaxial.bmp", &image);
 
 
+	//Setting paramenters
 	sigma = 1;
 	kernel_dim = 3;
+	sensibility = DEFAULT_SENSIBILITY;
+
+
 	gaussian_kernel = mk_gaussian_kernel(sigma, kernel_dim);
 
 
@@ -437,12 +473,11 @@ int main(){
 	apply_gaussian_filter(&image, gaussian_kernel, kernel_dim);
 
 
-	sensibility = 3;
-	shade = 0;
-	sobel_contours(&image, sensibility, shade);
+
+	sobel_contours(&image, sensibility);
 
 
-	check = saveBMP(image, "prova.bmp");
+	check = saveBMP(image, "result.bmp");
 	if(check == 0){
 		printf("Immagine modificata correttamente\n");
 	}
