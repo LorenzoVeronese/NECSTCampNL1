@@ -64,8 +64,11 @@ def extractImages(path, start, end):
         # print(len(epiImg.shape)) this is the number of channels (es. 2 => one channel)
         # print(epiImg[100][100])
         # print(type(epiImg[100][100]))
-        #plt.imshow(epiImg)
-        #plt.show()
+        if(prefix == 'labels-'):
+            for i in range(0, len(epiImg)):
+                for j in range(0, len(epiImg[i])):
+                    if (int(epiImg[j][i]) + 1) != 5:
+                        epiImg[j][i] = 0.0
         epiImg = resize(epiImg, (IMG_HEIGHT, IMG_WIDTH))
         images.append(epiImg)
 
@@ -78,6 +81,7 @@ def extractImages(path, start, end):
 # images
 print('-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_')
 print('Loading images...')
+
 trainOriginals = []
 trainOriginals1 = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 0, 50))
 trainOriginals2 = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 50-99'), 50, 100))
