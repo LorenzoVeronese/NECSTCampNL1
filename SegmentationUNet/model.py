@@ -71,19 +71,38 @@ def extractImages(path, start, end):
 
     return images
 
-#Prepare dataset
-trainOriginals = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 0, 50)) # 2 to change to 49
-print('a')
-trainLabels = np.array(extractImages(LABELS_PATH, 0, 50))  # 2 to change to 49
-print('a')
-testOriginals = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 50-99'), 50, 100))
-print('a')
-testLabels = np.array(extractImages(LABELS_PATH, 50, 100))
 
+
+#Prepare dataset
+# Train set
+# images
+print('-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_')
+print('Loading images...')
+trainOriginals = []
+trainOriginals1 = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 0, 50))
+trainOriginals2 = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 50-99'), 50, 100))
+for img in trainOriginals1:
+    trainOriginals.append(img)
+for img in trainOriginals2:
+    trainOriginals.append(img)
+trainOriginals = np.array(trainOriginals)
+print('trainOriginals done')
+# labels
+trainLabels = np.array(extractImages(LABELS_PATH, 0, 100))  # 2 to change to 49
+print('trainLabels done')
+# Test set
+# images
+testOriginals = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 100-139'), 100, 140))
+print('testOriginals done')
+# labels
+testLabels = np.array(extractImages(LABELS_PATH, 100, 140))
+print('testLabels done')
 
 
 
 #Build the model
+print('-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_')
+print('Building the model...')
 inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
 
 s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
@@ -179,7 +198,8 @@ model.compile(optimizer='adam', loss='binary_crossentropy',
               metrics=['accuracy'])
 model.summary()
 
-################################
+
+
 #Modelcheckpoint
 checkpointer = tf.keras.callbacks.ModelCheckpoint(
     'model_for_nuclei.h5', verbose=1, save_best_only=True
@@ -208,7 +228,11 @@ preds_val_t = (preds_val > 0.5).astype(np.uint8)
 preds_test_t = (preds_test > 0.5).astype(np.uint8)
 
 
-# Perform a sanity check on some random training samples
+
+# Perform some sanity check on some random training samples
+print('-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_')
+print('Sanity check: ')
+# 1
 ix = random.randint(0, len(preds_train_t))
 imshow(trainOriginals[ix])
 plt.show()
@@ -216,8 +240,23 @@ imshow(np.squeeze(trainLabels[ix]))
 plt.show()
 imshow(np.squeeze(preds_train_t[ix]))
 plt.show()
-
-# Perform a sanity check on some random validation samples
+# 2
+ix = random.randint(0, len(preds_val_t))
+imshow(trainOriginals[int(trainOriginals.shape[0]*0.9):][ix])
+plt.show()
+imshow(np.squeeze(trainLabels[int(trainLabels.shape[0]*0.9):][ix]))
+plt.show()
+imshow(np.squeeze(preds_val_t[ix]))
+plt.show()
+# 3
+ix = random.randint(0, len(preds_train_t))
+imshow(trainOriginals[ix])
+plt.show()
+imshow(np.squeeze(trainLabels[ix]))
+plt.show()
+imshow(np.squeeze(preds_train_t[ix]))
+plt.show()
+# 4
 ix = random.randint(0, len(preds_val_t))
 imshow(trainOriginals[int(trainOriginals.shape[0]*0.9):][ix])
 plt.show()
