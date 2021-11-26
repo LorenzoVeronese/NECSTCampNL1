@@ -9,6 +9,7 @@ import os
 import random
 import numpy as np
 
+
 from tqdm import tqdm
 
 from skimage.io import imread, imshow
@@ -59,37 +60,39 @@ def extractImages(path, start, end):
         tempPath = os.path.join(path, prefix + str(i) + '.nii.gz')
         epiImg = nibabel.load(tempPath)
         epiImg = epiImg.get_fdata()
-        epiImg = epiImg[:, :, 10]
+        epiImg = epiImg[:, :, 70]
+        # print(len(epiImg.shape)) this is the number of channels (es. 2 => one channel)
+        # print(epiImg[100][100])
+        # print(type(epiImg[100][100]))
+        #plt.imshow(epiImg)
+        #plt.show()
         epiImg = resize(epiImg, (IMG_HEIGHT, IMG_WIDTH))
         images.append(epiImg)
 
     return images
 
-
 #Prepare dataset
-trainOriginals = extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 0, 2) # 2 to change to 49
+trainOriginals = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 0, 50)) # 2 to change to 49
 print('a')
-trainLabels = extractImages(LABELS_PATH, 0, 2)  # 2 to change to 49
+trainLabels = np.array(extractImages(LABELS_PATH, 0, 50))  # 2 to change to 49
 print('a')
-testOriginals = extractImages(os.path.join(TRAIN_PATH, 'volumes 0-49'), 3, 5)
+testOriginals = np.array(extractImages(os.path.join(TRAIN_PATH, 'volumes 50-99'), 50, 100))
 print('a')
-testLabels = extractImages(LABELS_PATH, 3, 5)
+testLabels = np.array(extractImages(LABELS_PATH, 50, 100))
 
 
-img = trainOriginals[0]
-print(img)
-# plt.imshow(img)
 
 
 #Build the model
 inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
-s = tf.keras.layers.Lambda(lambda x: x / 256)(inputs)
+
+s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
 
 
 #Contraction path
 # 256x256
 c1 = tf.keras.layers.Conv2D(
-    16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(s)
+    16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', input_shape=(256, 256, 1))(s)
 c1 = tf.keras.layers.Dropout(0.1)(c1)
 c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu',
                             kernel_initializer='he_normal', padding='same')(c1)
@@ -171,7 +174,7 @@ c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu',
 outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
 
 
-model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+model = tf.keras.Model(inputs, outputs)
 model.compile(optimizer='adam', loss='binary_crossentropy',
               metrics=['accuracy'])
 model.summary()
@@ -187,8 +190,6 @@ callbacks = [
     tf.keras.callbacks.TensorBoard(log_dir='logs')
     ]
 
-print(type(trainOriginals))
-print(type(trainLabels))
 results = model.fit(trainOriginals, trainLabels, validation_split=0.1,
                     batch_size=16, epochs=25, callbacks=callbacks)
 

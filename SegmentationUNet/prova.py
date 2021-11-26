@@ -17,8 +17,8 @@ print(epi_img_data.shape)
 # compose the file
 
 slice_0 = epi_img_data[:, :, 74]
-slice_1 = epi_img_data[:, :, 54]
-slice_2 = epi_img_data[:, :, 4]
+slice_1 = epi_img_data[:, :, 73]
+slice_2 = epi_img_data[:, :, 72]
 show_slices([slice_0, slice_1, slice_2])
 plt.suptitle("Center slices for EPI image")
 plt.show()
