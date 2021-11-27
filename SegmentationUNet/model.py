@@ -96,9 +96,10 @@ def saveResults(trainOriginals, trainLabels, preds_train_t):
         im = im.convert('RGB')
         im.save(os.path.join(SAVE_PATH, str(i) + 'Label.jpeg'))
 
-        im = Image.fromarray(preds_train_t[i])
+        im = Image.fromarray((preds_train_t[i]*255).astype(np.uint8))
         im = im.convert('RGB')
         im.save(os.path.join(SAVE_PATH, str(i) + 'Predicted.jpeg'))
+
 
            
 
