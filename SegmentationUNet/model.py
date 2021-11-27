@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 
 import nibabel
 
+from PIL import Image
+
+
 
 seed = 42
 np.random.seed = seed
@@ -29,6 +32,8 @@ IMG_CHANNELS = 1
 TRAIN_PATH = r"C:\Users\loren\OneDrive - Politecnico di Milano\Desktop\Lorenzo\Università\NECSTCamp\Progetto\Segmentation\Data"
 LABELS_PATH = r"C:\Users\loren\OneDrive - Politecnico di Milano\Desktop\Lorenzo\Università\NECSTCamp\Progetto\Segmentation\Labels"
 TEST_PATH = r"C:\Users\loren\OneDrive - Politecnico di Milano\Desktop\Lorenzo\Università\NECSTCamp\Progetto\Segmentation\Data\volumes 100-139"
+
+SAVE_PATH = r"C:\Users\loren\OneDrive - Politecnico di Milano\Desktop\Lorenzo\Università\NECSTCamp\Progetto\necst\SegmentationUNet/results"
 
 
 def extractImages(path, start, end):
@@ -49,8 +54,8 @@ def extractImages(path, start, end):
         prefix = 'volume-' # it's in the TRAIN_PATH or TEST_PATH directory
     
     tempPath = path
-    for i in range(start, end):
-        tempPath = os.path.join(path, prefix + str(i) + '.nii.gz')
+    for indexImage in range(start, end):
+        tempPath = os.path.join(path, prefix + str(indexImage) + '.nii.gz')
         epiImg = nibabel.load(tempPath)
         epiImg = epiImg.get_fdata()
         epiImg = epiImg[:, :, 70]
@@ -60,8 +65,9 @@ def extractImages(path, start, end):
         if(prefix == 'labels-'):
             for i in range(0, len(epiImg)):
                 for j in range(0, len(epiImg[i])):
-                    if (int(epiImg[j][i]) + 1) != 5:
+                    if (int(epiImg[j][i] - 0.1) + 1) != 5:
                         epiImg[j][i] = 0.0
+
         epiImg = resize(epiImg, (IMG_HEIGHT, IMG_WIDTH))
         images.append(epiImg)
 
@@ -73,12 +79,28 @@ def sanityCheck(trainOriginals, trainLabels, preds_train_t):
     ix = random.randint(0, len(preds_train_t))
     imshow(trainOriginals[ix])
     plt.show()
-    imshow(np.squeeze(trainLabels[ix]))
+    imshow(trainLabels[ix])
     plt.show()
-    imshow(np.squeeze(preds_train_t[ix]))
+    imshow(preds_train_t[ix])
     plt.show()
 
 
+
+def saveResults(trainOriginals, trainLabels, preds_train_t):
+    for i in range(0, 75):
+        im = Image.fromarray(trainOriginals[i])
+        im = im.convert('RGB')
+        im.save(os.path.join(SAVE_PATH, str(i) + 'Original.jpeg'))
+
+        im = Image.fromarray(trainLabels[i])
+        im = im.convert('RGB')
+        im.save(os.path.join(SAVE_PATH, str(i) + 'Label.jpeg'))
+
+        im = Image.fromarray(preds_train_t[i])
+        im = im.convert('RGB')
+        im.save(os.path.join(SAVE_PATH, str(i) + 'Predicted.jpeg'))
+
+           
 
 def uNet():
 
@@ -264,3 +286,9 @@ sanityCheck(trainOriginals, trainLabels, preds_train_t)
 sanityCheck(trainOriginals, trainLabels, preds_train_t)
 # 5
 sanityCheck(trainOriginals, trainLabels, preds_train_t)
+
+
+
+
+# Save results
+saveResults(trainOriginals, trainLabels, preds_train_t)
