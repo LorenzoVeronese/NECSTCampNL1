@@ -58,7 +58,7 @@ def extractImages(path, start, end):
         tempPath = os.path.join(path, prefix + str(indexImage) + '.nii.gz')
         epiImg = nibabel.load(tempPath)
         epiImg = epiImg.get_fdata()
-        epiImg = epiImg[:, :, 70]
+        epiImg = epiImg[:, :, 30]
         # print(len(epiImg.shape)) this is the number of channels (es. 2 => one channel)
         # print(epiImg[100][100])
         # print(type(epiImg[100][100]))
