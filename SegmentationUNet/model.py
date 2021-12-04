@@ -244,7 +244,7 @@ checkpointer = tf.keras.callbacks.ModelCheckpoint(
 
 callbacks = [
     tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
-    tf.keras.callbacks.TensorBoard(log_dir='logs')
+    tf.keras.callbacks.TensorBoard(log_dir=r"SegmentationUNet/logs")
     ]
 
 results = model.fit(trainOriginals, trainLabels, validation_split=0.1,
